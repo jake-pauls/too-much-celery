@@ -18,7 +18,6 @@ celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.result_backend = redis
 celery.conf.update(app.config)
 
-
 # Flask Routes
 @app.route('/', methods=['GET'])
 def ping():
@@ -27,18 +26,22 @@ def ping():
 @app.route('/celery', methods=['GET'])
 def test():
     """
+    Test endpoint to access worker
     @celery.task.delay() - shortcut for simple worker tasks
     @celery.task.apply_async() - default, supports broader execution options (such as linking tasks, error callbacks, etc.)
     """
     task = add.apply_async((4,4), expires=60)
-    return { "message": "Hello from Celery!" }, 200
+    return { "task":"add", "result":task.result, "status":task.status }, 200
 
 # Celery Worker Tasks
-@celery.task
+@celery.task()
 def add(x, y):
-    val = x + y
-    print('add: {0} + {1} = {2}'.format(x,y, val))
-    return val
+    """
+    Test worker task
+    In progress results are posted to client, once finished, the worker posts task result to console
+    """
+    result = x + y
+    return { "result":result, "status": "Task completed succesfully!" }
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0")
