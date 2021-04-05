@@ -1,1 +1,1 @@
-# celery-flask
+# celery-flask example
