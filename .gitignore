@@ -1,6 +1,5 @@
 # Local
 redis-stable/
-redis.sh
 .vscode
 
 # Celery stuff
