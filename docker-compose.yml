@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  # Redis Instance
+  redis:
+    container_name: redis
+    restart: always
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+  
+  # Celery Worker
+  celery:
+    container_name: celery
+    build: .
+    restart: always
+    command: celery -A app.celery worker --loglevel=INFO
+    environment:
+      - WORKER_URL=redis://redis:6379/0
+    volumes:
+      - .:/app
+    depends_on: 
+      - redis
+    links:
+      - redis
+
+  # Flask App
+  app:
+    build: .
+    container_name: app
+    restart: always
+    environment: 
+      - WORKER_URL=redis://redis:6379/0
+    volumes: 
+      - .:/app
+    depends_on: 
+      - redis
+    ports:
+      - "5000:5000"

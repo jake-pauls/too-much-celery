@@ -1,0 +1,9 @@
+__pycache__
+.vscode
+venv
+redis.sh
+.env
+.git
+.github
+.gitignore
+README.md

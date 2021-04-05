@@ -10,18 +10,19 @@ load_dotenv(join(dirname(__file__), '.env'))
 app = Flask(__name__)
 
 # Configure Celery Worker
-app.config['CELERY_BROKER_URL'] = os.environ.get("WORKER_URL")
-app.config['CELERY_RESULT_BACKEND'] = os.environ.get("WORKER_URL")
+redis = os.environ.get("WORKER_URL")
+app.config['CELERY_BROKER_URL'] = redis
 
 # Init Celery
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.result_backend = redis
 celery.conf.update(app.config)
 
 
 # Flask Routes
 @app.route('/', methods=['GET'])
 def ping():
-    return { "ping": "pong" }
+    return { "ping": "pong" }, 200
 
 @app.route('/celery', methods=['GET'])
 def test():
@@ -30,7 +31,7 @@ def test():
     @celery.task.apply_async() - default, supports broader execution options (such as linking tasks, error callbacks, etc.)
     """
     task = add.apply_async((4,4), expires=60)
-    return { "message": "Hello from Celery!" }
+    return { "message": "Hello from Celery!" }, 200
 
 # Celery Worker Tasks
 @celery.task
@@ -40,4 +41,4 @@ def add(x, y):
     return val
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(debug=True, host="0.0.0.0")
